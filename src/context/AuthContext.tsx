@@ -75,12 +75,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const login = (loginId: string, password?: string) => {
     const registeredUsers = JSON.parse(localStorage.getItem("mock_users") || "[]");
     
-    let existingUser = registeredUsers.find((u: any) => u.phone === loginId || (u.email && u.email === loginId));
+    const normalizedLoginId = loginId.trim();
+    const numericPhone = normalizedLoginId.replace(/\D/g, '');
+    
+    let existingUser = registeredUsers.find((u: any) => 
+      u.phone === normalizedLoginId || 
+      (numericPhone && u.phone === numericPhone) ||
+      (u.email && u.email.toLowerCase() === normalizedLoginId.toLowerCase())
+    );
     
     if (!existingUser) {
       const oldRegisteredEmails = JSON.parse(localStorage.getItem("mock_registered_users") || "[]");
-      if (oldRegisteredEmails.includes(loginId)) {
-        existingUser = { email: loginId, phone: "" };
+      if (oldRegisteredEmails.includes(normalizedLoginId)) {
+        existingUser = { email: normalizedLoginId, phone: "" };
       } else {
         throw new Error("Account not found. Please sign up first.");
       }

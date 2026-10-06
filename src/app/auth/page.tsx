@@ -67,11 +67,11 @@ export default function AuthPage() {
     try {
       if (isLogin) {
         if (!loginId || !loginPassword) throw new Error("Please fill in all fields");
-        login(loginId, loginPassword);
+        login(loginId.trim(), loginPassword);
       } else {
         // Signup
         if (!name || !phone || !password) throw new Error("Please fill all required fields");
-        register(phone, email, password);
+        register(phone.trim(), email.trim(), password);
         setSuccess("Account created successfully!");
       }
     } catch (err: any) {
