@@ -1,36 +1,31 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Restaurant Portal
 
-## Getting Started
+A modern, responsive, and secure web application for restaurant management, built with Next.js and React.js.
 
-First, run the development server:
+## Features Completed (Based on BRD)
+- **1-4. Authentication:** Login, Registration, Password field visibility, Remember me, Form validation.
+- **5. UI Layout:** Hero Section, Header with Search/Profile, Collapsible Left Sidebar.
+- **6-7. Functional & Non-Functional:** Fast, responsive UI, secure client-side protection for routes.
+- **8. Technology Stack:** React.js + Next.js
+- **9. Database:** Supabase setup initialized (requires connection strings).
+- **10. Deployment:** Production-ready build is configured, ready for Vercel deployment.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+## Next Steps for You
+
+### 1. Database Integration (Supabase)
+To store user data securely, we have set up Supabase. 
+1. Go to [Supabase](https://supabase.com) and create a new project.
+2. Get your `URL` and `anon key` from the project settings.
+3. Open the `.env.local` file in this project and paste them:
+```env
+NEXT_PUBLIC_SUPABASE_URL=your_url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_key
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
-
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
-
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+### 2. Deployment (Vercel)
+The app is production-ready. To deploy it online so the public can access it:
+1. Push this code to a new repository on GitHub.
+2. Go to [Vercel](https://vercel.com) and click "Add New Project".
+3. Import your GitHub repository.
+4. In the Environment Variables section on Vercel, add the same `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY`.
+5. Click **Deploy**. Vercel will automatically build (`npm run build`) and host your website online.
