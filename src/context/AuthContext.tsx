@@ -28,10 +28,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     const getSession = async () => {
-      // Force logout on page reload/refresh as requested by the user
-      await supabase.auth.signOut();
-      sessionStorage.removeItem("mock_user");
-      setUser(null);
+      // Check for existing mock user in localStorage instead of sessionStorage
+      const storedUser = localStorage.getItem("mock_user");
+      if (storedUser) {
+        setUser(JSON.parse(storedUser));
+      }
       setIsLoading(false);
     };
 
@@ -44,7 +45,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           email: session.user.email || ""
         });
       } else {
-        const storedUser = sessionStorage.getItem("mock_user");
+        const storedUser = localStorage.getItem("mock_user");
         if (!storedUser) {
           setUser(null);
         }
@@ -95,7 +96,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       phone: existingUser.phone || ""
     };
     setUser(newUser);
-    sessionStorage.setItem("mock_user", JSON.stringify(newUser));
+    localStorage.setItem("mock_user", JSON.stringify(newUser));
     
     const isAdmin = newUser.email === "admin@restaurant.com" || newUser.email.toLowerCase().includes("admin");
     router.push(isAdmin ? "/" : "/home");
@@ -123,7 +124,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       phone 
     };
     setUser(sessionUser);
-    sessionStorage.setItem("mock_user", JSON.stringify(sessionUser));
+    localStorage.setItem("mock_user", JSON.stringify(sessionUser));
     
     const isAdmin = sessionUser.email === "admin@restaurant.com" || sessionUser.email.toLowerCase().includes("admin");
     router.push(isAdmin ? "/" : "/home");
@@ -132,7 +133,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const logout = async () => {
     await supabase.auth.signOut();
     setUser(null);
-    sessionStorage.removeItem("mock_user");
+    localStorage.removeItem("mock_user");
     router.push("/auth");
   };
 
