@@ -58,7 +58,6 @@ export async function POST(req: Request) {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'strict',
-      maxAge: 30 * 60, // 30 minutes
       path: '/',
     });
 
@@ -92,7 +91,7 @@ export async function POST(req: Request) {
       );
       const cookieStore = await cookies();
       cookieStore.set('admin_token', token, {
-        httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'strict', maxAge: 30 * 60, path: '/',
+        httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'strict', path: '/',
       });
       return NextResponse.json({ success: true, message: 'Authentication successful (Mock Mode)', role: 'super_admin' });
     }

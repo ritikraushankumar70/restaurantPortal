@@ -1,467 +1,315 @@
-"use client";
+﻿"use client";
 
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useEffect, useRef } from "react";
+import DashboardLayout from "@/components/layout/DashboardLayout";
 import Link from "next/link";
 import { 
-  LayoutDashboard, 
-  Users, 
-  ShoppingBag, 
-  Settings, 
-  LogOut,
-  TrendingUp,
-  DollarSign,
-  Activity,
-  Utensils,
-  Calendar,
-  Tag,
-  Star
+  TrendingUp, ShoppingBag, Clock, Star, Bell, 
+  CheckCircle2, XCircle, ChevronRight, Download, ArrowLeft
 } from "lucide-react";
 
-import DashboardTab from "@/components/admin/DashboardTab";
-import SettingsTab from "@/components/admin/SettingsTab";
-
 export default function AdminDashboard() {
-  const router = useRouter();
-  const [isLoading, setIsLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState("dashboard");
-  const [orderFilter, setOrderFilter] = useState("all");
-  const [customerSearch, setCustomerSearch] = useState("");
-  const [viewingOrder, setViewingOrder] = useState<{id: string, customer: string, items: string, total: number, status: string} | null>(null);
-  const [ordersList, setOrdersList] = useState([
-    { id: "#ORD-1001", customer: "Rahul Kumar", items: "2x Paneer Tikka, 1x Naan", total: 400, status: "Delivered", time: "Today, 12:31 PM" },
-    { id: "#ORD-1002", customer: "Priya Sharma", items: "1x Butter Chicken, 2x Roti", total: 450, status: "Delivered", time: "Today, 12:32 PM" },
-    { id: "#ORD-1003", customer: "Amit Singh", items: "1x Veg Biryani, 1x Raita", total: 500, status: "Delivered", time: "Today, 12:33 PM" },
-    { id: "#ORD-1004", customer: "Neha Gupta", items: "1x Dal Makhani, 2x Naan", total: 550, status: "Delivered", time: "Today, 12:34 PM" },
-    { id: "#ORD-1005", customer: "Rohan Patel", items: "1x Chicken Tikka, 1x Coke", total: 600, status: "Delivered", time: "Today, 12:35 PM" }
+  const [hasNewOrder, setHasNewOrder] = useState(false);
+  const [avgRating, setAvgRating] = useState("4.3");
+  const [weeklyData, setWeeklyData] = useState([6000, 9750, 4500, 12750, 8250, 13500, 10500]);
+
+  
+  // Dummy Live Orders
+  const [liveOrders, setLiveOrders] = useState([
+    { id: "#ORD-8901", customer: "Rahul Sharma", items: "2x Maharaja Thali", amount: "â‚¹798", time: "2 mins ago", status: "pending" },
+    { id: "#ORD-8902", customer: "Priya Singh", items: "1x Paneer Tikka, 2x Naan", amount: "â‚¹450", time: "5 mins ago", status: "pending" },
+    { id: "#ORD-8899", customer: "Amit Kumar", items: "1x Veg Biryani", amount: "â‚¹220", time: "15 mins ago", status: "preparing" },
   ]);
-  const [editingCustomer, setEditingCustomer] = useState<{id: number, name: string, phone: string, email: string} | null>(null);
-  const [customersList, setCustomersList] = useState([
-    { id: 1, name: "Amit Singh", phone: "+91 9876543210", email: "amit@example.com", orders: 10 },
-    { id: 2, name: "Priya Sharma", phone: "+91 9876543211", email: "priya@example.com", orders: 9 },
-    { id: 3, name: "Rohan Gupta", phone: "+91 9876543212", email: "rohan@example.com", orders: 8 },
-    { id: 4, name: "Sneha Patel", phone: "+91 9876543213", email: "sneha@example.com", orders: 7 }
-  ]);
-  const [restaurantSettings, setRestaurantSettings] = useState({
-    restaurantName: "Restaurant Portal",
-    contactNumber: "+91 9876543210",
-    address: "123 Food Street, Tech Hub Area, Bengaluru",
-    openingTime: "10:00",
-    closingTime: "23:00"
-  });
-  const [isSavingSettings, setIsSavingSettings] = useState(false);
 
-  const handleSaveSettings = (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsSavingSettings(true);
-    localStorage.setItem("restaurantSettings", JSON.stringify(restaurantSettings));
-    window.dispatchEvent(new Event("settingsUpdated"));
-    
-    setTimeout(() => {
-      setIsSavingSettings(false);
-      alert("Restaurant Settings saved successfully!");
-    }, 800);
-  };
-
-  const handleLogout = async () => {
-    try {
-      await fetch('/api/admin/logout', { method: 'POST' });
-    } catch (e) {
-      console.error('Logout error', e);
-    }
-    router.push("/admin/login");
-  };
-
+  // Simulate incoming new order & sound alert
   useEffect(() => {
-    const savedCustomers = localStorage.getItem("admin_customers");
-    if (savedCustomers) {
-      try {
-        setCustomersList(JSON.parse(savedCustomers));
-      } catch(e) {}
-    }
-    
-    const savedSettings = localStorage.getItem("restaurantSettings");
-    if (savedSettings) {
-      try {
-        setRestaurantSettings(JSON.parse(savedSettings));
-      } catch(e) {}
-    }
-
-    const savedOrders = localStorage.getItem("admin_orders");
-    if (savedOrders) {
-      try {
-        setOrdersList(JSON.parse(savedOrders));
-      } catch(e) {}
-    }
-    // Just a small delay to simulate loading state for now
     const timer = setTimeout(() => {
-      setIsLoading(false);
-    }, 500);
+      setHasNewOrder(true);
+    }, 5000);
     return () => clearTimeout(timer);
   }, []);
 
-  // Logout if user switches tabs or browser
+  // Real Rating Calculation
   useEffect(() => {
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === 'hidden') {
-        handleLogout();
+    if (typeof window !== 'undefined') {
+      const storedReviews = localStorage.getItem('myReviews');
+      if (storedReviews) {
+        try {
+          const parsed = JSON.parse(storedReviews);
+          const initialReviews = [ { rating: 5 }, { rating: 4 }, { rating: 2 } ];
+          const allReviews = [...parsed, ...initialReviews];
+          if (allReviews.length > 0) {
+            const avg = (allReviews.reduce((acc, r) => acc + r.rating, 0) / allReviews.length).toFixed(1);
+            setAvgRating(avg);
+          }
+        } catch (e) {}
       }
-    };
-    
-    document.addEventListener("visibilitychange", handleVisibilityChange);
-    return () => {
-      document.removeEventListener("visibilitychange", handleVisibilityChange);
-    };
-  }, [router]);
+    }
+  }, []);
 
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-[#fafafa] flex justify-center items-center">
-        <div className="w-8 h-8 border-4 border-[#ff5a00]/30 border-t-[#ff5a00] rounded-full animate-spin"></div>
-      </div>
+  // Real Weekly Sales Calculation
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const storedOrders = localStorage.getItem('myOrders');
+      if (storedOrders) {
+        try {
+          const parsed = JSON.parse(storedOrders);
+          const newWeekly = [0, 0, 0, 0, 0, 0, 0];
+          let hasData = false;
+          parsed.forEach((order: any) => {
+            if (order.timestamp) {
+              const date = new Date(order.timestamp);
+              let day = date.getDay();
+              day = day === 0 ? 6 : day - 1; // Convert Sun=0 to Sun=6, Mon=1 to Mon=0
+              const amount = parseInt(String(order.amount).replace(/[^0-9]/g, '')) || 0;
+              newWeekly[day] += amount;
+              hasData = true;
+            }
+          });
+          if (hasData) {
+            setWeeklyData(newWeekly);
+          }
+        } catch (e) {}
+      }
+    }
+  }, []);
+
+  // Continuous Ringing Logic
+  useEffect(() => {
+    let ringInterval: NodeJS.Timeout;
+    
+    if (hasNewOrder) {
+      try {
+        const saved = localStorage.getItem("restaurantSettings");
+        if (saved) {
+          const settings = JSON.parse(saved);
+          if (settings.soundAlert) {
+            console.log("ðŸ”” [ALERT UTILITY] Continuous ringing started...");
+            alert("ðŸ”” [Alert Utility]\nContinuous Ringing Sound playing... (New Order Received)");
+            ringInterval = setInterval(() => {
+              console.log("ðŸ”” Ring... Ring...");
+            }, 2000);
+          }
+        }
+      } catch (e) {}
+    }
+
+    return () => {
+      if (ringInterval) clearInterval(ringInterval);
+    };
+  }, [hasNewOrder]);
+
+  const handleAcceptOrder = (id: string) => {
+    setLiveOrders(orders => 
+      orders.map(order => order.id === id ? { ...order, status: "preparing" } : order)
     );
-  }
+    setHasNewOrder(false);
+
+    // KOT Auto-Print Logic
+    try {
+      const saved = localStorage.getItem("restaurantSettings");
+      if (saved) {
+        const settings = JSON.parse(saved);
+        if (settings.autoPrint) {
+          console.log(`[PRINTER UTILITY] Printing KOT for ${id}...`);
+          alert(`ðŸ–¨ï¸ [Printer Utility]\nAutomatically printing Kitchen Order Ticket (KOT) for ${id}...`);
+        }
+      }
+    } catch (e) {
+      console.error("Failed to read printer settings", e);
+    }
+  };
+
+  const downloadReport = () => {
+    const headers = "Metric,Value\n";
+    const data = `Today's Sales,12450\nToday's Orders,42\nPending Orders,${liveOrders.filter(o => o.status === 'pending').length}\nAvg Rating,${avgRating}\n`;
+    const blob = new Blob([headers + data], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `dashboard_report_${new Date().toISOString().split('T')[0]}.csv`;
+    a.click();
+  };
 
   return (
-    <div className="min-h-screen bg-[#fafafa] flex">
-      {/* Sidebar */}
-      <aside className="w-64 bg-white border-r border-slate-200 hidden md:flex flex-col">
-        <div className="p-6 border-b border-slate-100 flex items-center gap-3">
-          <div className="bg-[#ff5a00] p-2 rounded-lg">
-            <LayoutDashboard className="w-6 h-6 text-white" />
-          </div>
-          <span className="font-bold text-xl text-slate-900">AdminPanel</span>
-        </div>
+    <DashboardLayout>
+      <div className="flex flex-col gap-8 pb-12">
         
-        <div className="flex-1 py-6 px-4 space-y-2">
-          <button 
-            onClick={() => setActiveTab("dashboard")}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-colors ${activeTab === 'dashboard' ? 'bg-[#ff5a00]/10 text-[#ff5a00]' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'}`}
-          >
-            <LayoutDashboard className="w-5 h-5" />
-            Dashboard
-          </button>
-          <button 
-            onClick={() => setActiveTab("orders")}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-colors ${activeTab === 'orders' ? 'bg-[#ff5a00]/10 text-[#ff5a00]' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'}`}
-          >
-            <ShoppingBag className="w-5 h-5" />
-            Orders
-          </button>
-          <button 
-            onClick={() => setActiveTab("customers")}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-colors ${activeTab === 'customers' ? 'bg-[#ff5a00]/10 text-[#ff5a00]' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'}`}
-          >
-            <Users className="w-5 h-5" />
-            Customers
-          </button>
-          <button 
-            onClick={() => setActiveTab("settings")}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-colors ${activeTab === 'settings' ? 'bg-[#ff5a00]/10 text-[#ff5a00]' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'}`}
-          >
-            <Settings className="w-5 h-5" />
-            Basic Settings
-          </button>
-          
-          <div className="pt-4 pb-2">
-            <p className="px-4 text-xs font-bold text-slate-400 uppercase tracking-wider">Advanced Features</p>
-          </div>
-          
-          <Link href="/menu" className="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-colors text-slate-500 hover:bg-slate-50 hover:text-slate-900">
-            <Utensils className="w-5 h-5" />
-            Menu Management
-          </Link>
-          <Link href="/tables" className="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-colors text-slate-500 hover:bg-slate-50 hover:text-slate-900">
-            <Calendar className="w-5 h-5" />
-            Table Management
-          </Link>
-          <Link href="/offers" className="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-colors text-slate-500 hover:bg-slate-50 hover:text-slate-900">
-            <Tag className="w-5 h-5" />
-            Offers / Coupons
-          </Link>
-          <Link href="/reviews" className="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-colors text-slate-500 hover:bg-slate-50 hover:text-slate-900">
-            <Star className="w-5 h-5" />
-            Reviews
-          </Link>
-          <Link href="/settings" className="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-colors text-slate-500 hover:bg-slate-50 hover:text-slate-900">
-            <Settings className="w-5 h-5" />
-            Advanced Settings
-          </Link>
-        </div>
-        
-        <div className="p-4 border-t border-slate-100">
-          <button 
-            onClick={handleLogout}
-            className="flex items-center gap-3 px-4 py-3 w-full text-red-500 hover:bg-red-50 rounded-xl font-medium transition-colors"
-          >
-            <LogOut className="w-5 h-5" />
-            Logout
-          </button>
-        </div>
-      </aside>
-
-      {/* Main Content */}
-      <main className="flex-1 p-8 overflow-y-auto">
-        <div className="flex justify-between items-center mb-8">
+        {/* Header & Actions */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-bold text-slate-900 capitalize">{activeTab}</h1>
-            <p className="text-slate-500">Welcome back, Super Admin!</p>
+            <h1 className="text-2xl font-bold text-gray-900">Owner Dashboard</h1>
+            <p className="text-sm text-gray-500">Welcome back! Here's what's happening today.</p>
           </div>
-          <div className="flex items-center gap-4">
-            <div className="w-10 h-10 rounded-full bg-[#ff5a00] flex items-center justify-center text-white font-bold shadow-sm cursor-pointer hover:bg-[#e04f00] transition-colors">
-              A
-            </div>
+          <div className="flex items-center gap-3">
+            <Link href="/home" className="flex items-center gap-2 bg-orange-50 border border-orange-200 text-orange-600 px-4 py-2 rounded-lg text-sm font-bold hover:bg-orange-100 transition-colors shadow-sm">
+              <ArrowLeft size={16} /> Customer View
+            </Link>
+            <button onClick={downloadReport} className="flex items-center gap-2 bg-white border border-gray-200 text-gray-700 px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors shadow-sm">
+              <Download size={16} /> Export Report
+            </button>
           </div>
         </div>
 
-        {activeTab === "dashboard" && (
-          <DashboardTab />
-        )}
+        {/* TOP CARDS */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+          <Link href="/payouts" className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 flex flex-col gap-3 hover:shadow-md transition-shadow cursor-pointer block">
+            <div className="flex items-center justify-between">
+              <span className="text-gray-500 text-sm font-medium">Today's Sales</span>
+              <div className="p-2 bg-green-50 text-green-600 rounded-lg"><TrendingUp size={20} /></div>
+            </div>
+            <div className="flex items-end gap-2">
+              <h2 className="text-3xl font-bold text-gray-900">â‚¹12,450</h2>
+              <span className="text-green-600 text-xs font-bold mb-1">+15%</span>
+            </div>
+          </Link>
+          
+          <Link href="/orders" className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 flex flex-col gap-3 hover:shadow-md transition-shadow cursor-pointer block">
+            <div className="flex items-center justify-between">
+              <span className="text-gray-500 text-sm font-medium">Today's Orders</span>
+              <div className="p-2 bg-blue-50 text-blue-600 rounded-lg"><ShoppingBag size={20} /></div>
+            </div>
+            <div className="flex items-end gap-2">
+              <h2 className="text-3xl font-bold text-gray-900">42</h2>
+              <span className="text-green-600 text-xs font-bold mb-1">+8%</span>
+            </div>
+          </Link>
 
-        {activeTab === "orders" && (
-          <div className="bg-white rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100 p-8">
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="text-xl font-bold text-slate-900">Orders Management</h2>
-              <div className="flex gap-2">
-                <button 
-                  onClick={() => setOrderFilter("all")} 
-                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${orderFilter === 'all' ? 'bg-[#ff5a00] text-white' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'}`}
-                >All</button>
-                <button 
-                  onClick={() => setOrderFilter("pending")} 
-                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${orderFilter === 'pending' ? 'bg-[#ff5a00] text-white' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'}`}
-                >Pending</button>
-                <button 
-                  onClick={() => setOrderFilter("completed")} 
-                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${orderFilter === 'completed' ? 'bg-[#ff5a00] text-white' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'}`}
-                >Completed</button>
-              </div>
+          <Link href="/orders" className="bg-white p-5 rounded-2xl shadow-sm border border-orange-200 relative overflow-hidden flex flex-col gap-3 hover:shadow-md transition-shadow cursor-pointer block">
+            {hasNewOrder && <span className="absolute top-0 right-0 w-3 h-3 bg-red-500 rounded-full animate-ping m-3"></span>}
+            <div className="flex items-center justify-between">
+              <span className="text-orange-800 text-sm font-bold">Pending Orders</span>
+              <div className="p-2 bg-orange-100 text-orange-600 rounded-lg"><Clock size={20} /></div>
+            </div>
+            <div className="flex items-end gap-2">
+              <h2 className="text-3xl font-bold text-orange-600">
+                {liveOrders.filter(o => o.status === 'pending').length}
+              </h2>
+              <span className="text-orange-600 text-xs font-bold mb-1">Needs Action!</span>
+            </div>
+          </Link>
+
+          <Link href="/reviews" className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 flex flex-col gap-3 hover:shadow-md transition-shadow cursor-pointer block">
+            <div className="flex items-center justify-between">
+              <span className="text-gray-500 text-sm font-medium">Avg Rating</span>
+              <div className="p-2 bg-yellow-50 text-yellow-600 rounded-lg"><Star size={20} /></div>
+            </div>
+            <div className="flex items-end gap-2">
+              <h2 className="text-3xl font-bold text-gray-900">{avgRating}<span className="text-lg text-gray-400">/5</span></h2>
+            </div>
+          </Link>
+        </div>
+
+        {/* MIDDLE SECTION: Live Orders & Chart */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          
+          {/* LIVE ORDERS (1-Click Accept Rule) */}
+          <div className="lg:col-span-2 bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+                Live Orders 
+                <span className="bg-orange-100 text-orange-600 px-2 py-0.5 rounded text-xs">Live</span>
+              </h3>
+              <Link href="/orders" className="text-orange-600 text-sm font-medium hover:underline">View All</Link>
             </div>
             
-            <div className="overflow-x-auto">
-              <table className="w-full text-left">
-                <thead>
-                  <tr className="text-slate-500 border-b border-slate-100">
-                    <th className="pb-4 font-semibold">Order ID</th>
-                    <th className="pb-4 font-semibold">Customer</th>
-                    <th className="pb-4 font-semibold">Items</th>
-                    <th className="pb-4 font-semibold">Total</th>
-                    <th className="pb-4 font-semibold">Status</th>
-                    <th className="pb-4 font-semibold text-right">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100">
-                  {ordersList
-                    .filter(order => {
-                      if (orderFilter === 'all') return true;
-                      if (orderFilter === 'pending') return order.status === 'Preparing';
-                      if (orderFilter === 'completed') return order.status === 'Delivered';
-                      return true;
-                    })
-                    .map((order, index) => (
-                    <tr key={index} className="hover:bg-slate-50 transition-colors">
-                      <td className="py-4 font-medium text-slate-900">{order.id}</td>
-                      <td className="py-4 text-slate-600">{order.customer}</td>
-                      <td className="py-4 text-slate-600">{order.items}</td>
-                      <td className="py-4 font-bold text-slate-900">₹{order.total}</td>
-                      <td className="py-4">
-                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${order.status === 'Preparing' ? 'bg-amber-100 text-amber-800' : 'bg-emerald-100 text-emerald-800'}`}>
-                          {order.status}
-                        </span>
-                      </td>
-                      <td className="py-4 text-right">
-                        <button onClick={() => setViewingOrder(order)} className="text-[#ff5a00] font-medium text-sm hover:underline">View</button>
-                      </td>
-                    </tr>
-                  ))}
+            <div className="space-y-4">
+              {liveOrders.map((order) => (
+                <div key={order.id} className={`p-4 rounded-xl border ${order.status === 'pending' ? 'border-orange-200 bg-orange-50/30' : 'border-gray-100 bg-gray-50'} flex flex-col sm:flex-row justify-between gap-4 transition-colors`}>
+                  <div className="flex-1">
+                    <div className="flex items-center gap-3 mb-1">
+                      <span className="font-bold text-gray-900">{order.id}</span>
+                      <span className="text-xs text-gray-500">{order.time}</span>
+                    </div>
+                    <p className="text-sm font-medium text-gray-800">{order.customer}</p>
+                    <p className="text-sm text-gray-500 mt-1">{order.items}</p>
+                  </div>
                   
-                  {/* Empty state if no orders match filter */}
-                  {ordersList.filter(order => (orderFilter === 'all') || (orderFilter === 'pending' && order.status === 'Preparing') || (orderFilter === 'completed' && order.status === 'Delivered')).length === 0 && (
-                    <tr>
-                      <td colSpan={6} className="py-8 text-center text-slate-500">No orders found.</td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
-            
-            {viewingOrder && (
-              <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-                <div className="bg-white rounded-2xl w-full max-w-md overflow-hidden shadow-xl animate-in fade-in zoom-in duration-200">
-                  <div className="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50">
-                    <h3 className="font-bold text-slate-900 text-lg">Order Details</h3>
-                    <button onClick={() => setViewingOrder(null)} className="text-slate-400 hover:text-slate-700 transition-colors">
-                      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
-                    </button>
-                  </div>
-                  <div className="p-6 space-y-4">
-                    <div className="flex justify-between items-center border-b border-slate-100 pb-4">
-                      <div>
-                        <p className="text-sm text-slate-500 mb-1">Order ID</p>
-                        <p className="font-bold text-slate-900">{viewingOrder.id}</p>
+                  <div className="flex flex-col sm:items-end justify-between gap-3">
+                    <span className="font-bold text-lg text-gray-900">{order.amount}</span>
+                    {order.status === 'pending' ? (
+                      <div className="flex gap-2 w-full sm:w-auto">
+                        <button 
+                          onClick={() => handleAcceptOrder(order.id)}
+                          className="flex-1 sm:flex-none flex items-center justify-center gap-1 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-bold shadow-sm transition-colors"
+                        >
+                          <CheckCircle2 size={16} /> Accept
+                        </button>
+                        <button 
+                          onClick={() => setLiveOrders(orders => orders.map(o => o.id === order.id ? { ...o, status: "cancelled" } : o))}
+                          className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors border border-red-100"
+                        >
+                          <XCircle size={20} />
+                        </button>
                       </div>
-                      <div className="text-right">
-                        <p className="text-sm text-slate-500 mb-1">Status</p>
-                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${viewingOrder.status === 'Preparing' ? 'bg-amber-100 text-amber-800' : 'bg-emerald-100 text-emerald-800'}`}>
-                          {viewingOrder.status}
+                    ) : order.status === 'preparing' ? (
+                      <div className="flex gap-2 w-full sm:w-auto">
+                        <span className="bg-blue-100 text-blue-700 px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider text-center flex items-center">
+                          Preparing
                         </span>
+                        <button 
+                          onClick={() => setLiveOrders(orders => orders.map(o => o.id === order.id ? { ...o, status: "ready" } : o))}
+                          className="flex items-center justify-center bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1.5 rounded-lg text-xs font-bold shadow-sm transition-colors"
+                        >
+                          Mark Ready
+                        </button>
                       </div>
-                    </div>
-                    <div className="py-2">
-                      <p className="text-sm font-semibold text-slate-700 mb-2">Customer</p>
-                      <p className="text-slate-900">{viewingOrder.customer}</p>
-                    </div>
-                    <div className="py-2">
-                      <p className="text-sm font-semibold text-slate-700 mb-2">Items</p>
-                      <p className="text-slate-900">{viewingOrder.items}</p>
-                    </div>
-                    <div className="pt-4 border-t border-slate-100 flex justify-between items-center">
-                      <p className="font-bold text-slate-900">Total Amount</p>
-                      <p className="font-bold text-xl text-[#ff5a00]">₹{viewingOrder.total}</p>
-                    </div>
-                  </div>
-                  <div className="px-6 py-4 border-t border-slate-100 bg-slate-50 flex justify-end gap-3">
-                    <button onClick={() => setViewingOrder(null)} className="px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-200 bg-slate-100 rounded-lg transition-colors">Close</button>
-                    {viewingOrder.status === 'Preparing' && (
-                      <button 
-                        onClick={() => {
-                          const newOrders = ordersList.map(o => o.id === viewingOrder.id ? { ...o, status: 'Delivered' } : o);
-                          setOrdersList(newOrders);
-                          localStorage.setItem("admin_orders", JSON.stringify(newOrders));
-                          setViewingOrder({ ...viewingOrder, status: 'Delivered' });
-                        }}
-                        className="px-4 py-2 text-sm font-medium text-white bg-emerald-500 hover:bg-emerald-600 rounded-lg transition-colors"
-                      >
-                        Mark as Delivered
-                      </button>
+                    ) : order.status === 'ready' ? (
+                      <div className="flex gap-2 w-full sm:w-auto">
+                        <span className="bg-indigo-100 text-indigo-700 px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider text-center flex items-center">
+                          Ready
+                        </span>
+                        <button 
+                          onClick={() => setLiveOrders(orders => orders.map(o => o.id === order.id ? { ...o, status: "delivered" } : o))}
+                          className="flex items-center justify-center bg-green-600 hover:bg-green-700 text-white px-3 py-1.5 rounded-lg text-xs font-bold shadow-sm transition-colors"
+                        >
+                          Deliver
+                        </button>
+                      </div>
+                    ) : (
+                      <span className={`px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider text-center ${
+                        order.status === 'delivered' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
+                      }`}>
+                        {order.status}
+                      </span>
                     )}
                   </div>
                 </div>
-              </div>
-            )}
+              ))}
+            </div>
           </div>
-        )}
 
-        {activeTab === "customers" && (
-          <div className="bg-white rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100 p-8">
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="text-xl font-bold text-slate-900">Customer Database</h2>
-              <div className="flex gap-4">
-                <input 
-                  type="text" 
-                  value={customerSearch}
-                  onChange={(e) => setCustomerSearch(e.target.value)}
-                  placeholder="Search customers..." 
-                  className="px-4 py-2 border border-slate-200 rounded-xl bg-slate-50 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-[#ff5a00] focus:border-[#ff5a00]"
-                />
-                <button 
-                  onClick={() => setEditingCustomer({ id: 0, name: "", phone: "", email: "" })} 
-                  className="bg-[#ff5a00] text-white px-4 py-2 rounded-xl font-medium hover:bg-[#e04f00] transition-colors whitespace-nowrap"
-                >
-                  + Add Customer
-                </button>
-              </div>
-            </div>
-
-            <div className="overflow-x-auto">
-              <table className="w-full text-left">
-                <thead>
-                  <tr className="text-slate-500 border-b border-slate-100">
-                    <th className="pb-4 font-semibold">Name</th>
-                    <th className="pb-4 font-semibold">Phone</th>
-                    <th className="pb-4 font-semibold">Email</th>
-                    <th className="pb-4 font-semibold">Total Orders</th>
-                    <th className="pb-4 font-semibold text-right">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100">
-                  {customersList
-                    .filter(c => 
-                      c.name.toLowerCase().includes(customerSearch.toLowerCase()) || 
-                      c.phone.includes(customerSearch) || 
-                      c.email.toLowerCase().includes(customerSearch.toLowerCase())
-                    )
-                    .map((c, i) => (
-                    <tr key={c.id} className="hover:bg-slate-50 transition-colors">
-                      <td className="py-4 flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-full bg-[#ff5a00]/10 text-[#ff5a00] flex items-center justify-center font-bold text-sm">
-                          {c.name.charAt(0)}
-                        </div>
-                        <span className="font-medium text-slate-900">{c.name}</span>
-                      </td>
-                      <td className="py-4 text-slate-600">{c.phone}</td>
-                      <td className="py-4 text-slate-600">{c.email}</td>
-                      <td className="py-4 font-medium text-slate-900">{c.orders}</td>
-                      <td className="py-4 text-right">
-                        <button onClick={() => setEditingCustomer({id: c.id, name: c.name, phone: c.phone, email: c.email})} className="text-[#ff5a00] font-medium text-sm hover:underline">Edit</button>
-                      </td>
-                    </tr>
-                  ))}
-                  
-                  {customersList
-                    .filter(c => 
-                      c.name.toLowerCase().includes(customerSearch.toLowerCase()) || 
-                      c.phone.includes(customerSearch) || 
-                      c.email.toLowerCase().includes(customerSearch.toLowerCase())
-                    ).length === 0 && (
-                    <tr>
-                      <td colSpan={5} className="py-8 text-center text-slate-500">No customers found matching "{customerSearch}".</td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
-            
-            {editingCustomer && (
-              <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-                <div className="bg-white rounded-2xl w-full max-w-md overflow-hidden shadow-xl animate-in fade-in zoom-in duration-200">
-                  <div className="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50">
-                    <h3 className="font-bold text-slate-900 text-lg">{editingCustomer.id === 0 ? "Add Customer" : "Edit Customer"}</h3>
-                    <button onClick={() => setEditingCustomer(null)} className="text-slate-400 hover:text-slate-700 transition-colors">
-                      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
-                    </button>
+          {/* SIMPLE CSS SALES CHART */}
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 flex flex-col">
+            <h3 className="text-lg font-bold text-gray-900 mb-6">Weekly Sales</h3>
+            <div className="flex-1 flex items-end justify-between gap-2 h-48 mt-auto pb-2">
+              {/* CSS Bars for Chart Demo */}
+              {weeklyData.map((amount, i) => {
+                const maxAmount = Math.max(...weeklyData) || 1;
+                const height = amount > 0 ? Math.max((amount / maxAmount) * 100, 5) : 0;
+                const todayIndex = new Date().getDay() === 0 ? 6 : new Date().getDay() - 1;
+                return (
+                <div key={i} className="flex flex-col items-center justify-end gap-2 group w-full h-full">
+                  <div className="w-full relative flex justify-center h-full items-end">
+                    <div 
+                      className={`w-full max-w-[2rem] rounded-t-md transition-all duration-500 ${i === todayIndex ? 'bg-orange-500' : 'bg-orange-100 group-hover:bg-orange-200 cursor-pointer'}`}
+                      style={{ height: `${height}%` }}
+                    ></div>
+                    {/* Tooltip */}
+                    <span className="absolute -top-8 bg-gray-900 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity z-10 pointer-events-none whitespace-nowrap">
+                      â‚¹{amount}
+                    </span>
                   </div>
-                  <div className="p-6 space-y-4">
-                    <div>
-                      <label className="block text-sm font-medium text-slate-700 mb-1">Name</label>
-                      <input type="text" value={editingCustomer.name} onChange={(e) => setEditingCustomer({...editingCustomer, name: e.target.value})} className="w-full px-3 py-2 border border-slate-200 rounded-lg text-slate-900 bg-white focus:outline-none focus:ring-1 focus:ring-[#ff5a00] focus:border-[#ff5a00]" />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-slate-700 mb-1">Phone</label>
-                      <input type="text" value={editingCustomer.phone} onChange={(e) => setEditingCustomer({...editingCustomer, phone: e.target.value})} className="w-full px-3 py-2 border border-slate-200 rounded-lg text-slate-900 bg-white focus:outline-none focus:ring-1 focus:ring-[#ff5a00] focus:border-[#ff5a00]" />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-slate-700 mb-1">Email</label>
-                      <input type="email" value={editingCustomer.email} onChange={(e) => setEditingCustomer({...editingCustomer, email: e.target.value})} className="w-full px-3 py-2 border border-slate-200 rounded-lg text-slate-900 bg-white focus:outline-none focus:ring-1 focus:ring-[#ff5a00] focus:border-[#ff5a00]" />
-                    </div>
-                  </div>
-                  <div className="px-6 py-4 border-t border-slate-100 bg-slate-50 flex justify-end gap-3">
-                    <button onClick={() => setEditingCustomer(null)} className="px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-200 bg-slate-100 rounded-lg transition-colors">Cancel</button>
-                    <button onClick={() => {
-                      let newList;
-                      if (editingCustomer.id === 0) {
-                        const newId = customersList.length > 0 ? Math.max(...customersList.map(c => c.id)) + 1 : 1;
-                        newList = [...customersList, { id: newId, name: editingCustomer.name, phone: editingCustomer.phone, email: editingCustomer.email, orders: 0 }];
-                      } else {
-                        newList = customersList.map(c => c.id === editingCustomer.id ? {...c, name: editingCustomer.name, phone: editingCustomer.phone, email: editingCustomer.email} : c);
-                      }
-                      setCustomersList(newList);
-                      localStorage.setItem("admin_customers", JSON.stringify(newList));
-                      setEditingCustomer(null);
-                    }} className="px-4 py-2 text-sm font-medium text-white bg-[#ff5a00] hover:bg-[#e04f00] rounded-lg transition-colors">
-                      {editingCustomer.id === 0 ? "Add Customer" : "Save Changes"}
-                    </button>
-                  </div>
+                  <span className="text-xs text-gray-400 font-medium">
+                    {['M', 'T', 'W', 'T', 'F', 'S', 'S'][i]}
+                  </span>
                 </div>
-              </div>
-            )}
+              )})}
+            </div>
           </div>
-        )}
 
-        {activeTab === "settings" && (
-          <SettingsTab />
-        )}
-      </main>
-    </div>
+        </div>
+      </div>
+    </DashboardLayout>
   );
 }

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Eye, EyeOff, ShieldCheck, Lock, AlertCircle, ArrowRight } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { useAdminAuth } from "@/context/AdminAuthContext";
 
 export default function AdminLoginPage() {
   // Steps: 1 = Login, 2 = OTP Verification, 3 = Forgot Password (optional flow)
@@ -21,6 +22,7 @@ export default function AdminLoginPage() {
   const [adminId, setAdminId] = useState<number | null>(null);
   
   const router = useRouter();
+  const { loginAdmin } = useAdminAuth();
 
   // Handle Initial Login (Email/Password)
   const handleLoginSubmit = async (e: React.FormEvent) => {
@@ -83,7 +85,7 @@ export default function AdminLoginPage() {
         setError(data.error || "OTP verification failed");
       } else {
         // Success - Redirect
-        router.push("/admin/dashboard");
+        loginAdmin();
       }
     } catch (err: any) {
       setError("An error occurred verifying OTP. Please try again.");

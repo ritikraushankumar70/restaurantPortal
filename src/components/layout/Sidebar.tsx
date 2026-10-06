@@ -18,7 +18,7 @@ import {
   Info,
   Phone
 } from "lucide-react";
-import { useAuth } from "@/context/AuthContext";
+import { useAdminAuth } from "@/context/AdminAuthContext";
 
 const NAV_ITEMS = [
   { name: "Dashboard", href: "/admin/dashboard", icon: LayoutDashboard },
@@ -40,7 +40,7 @@ interface SidebarProps {
 
 export default function Sidebar({ isOpen, setIsOpen, isMobileOpen, setIsMobileOpen }: SidebarProps) {
   const pathname = usePathname();
-  const { logout } = useAuth();
+  const { logoutAdmin } = useAdminAuth();
 
   return (
     <>
@@ -84,7 +84,7 @@ export default function Sidebar({ isOpen, setIsOpen, isMobileOpen, setIsMobileOp
 
         <div className="p-3 border-t">
           <button
-            onClick={logout}
+            onClick={logoutAdmin}
             className="w-full flex items-center gap-3 px-3 py-3 rounded-xl text-gray-600 hover:bg-red-50 hover:text-red-600 transition-colors"
             title={!isOpen ? "Logout" : undefined}
           >

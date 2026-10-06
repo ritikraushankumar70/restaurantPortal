@@ -2,6 +2,7 @@
 
 import { Bell, Menu, Search, User, LogOut, Utensils } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
+import { useAdminAuth } from "@/context/AdminAuthContext";
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
@@ -21,6 +22,7 @@ const TOP_NAV_LINKS = [
 
 export default function Header({ onMenuClick }: HeaderProps) {
   const { user, logout } = useAuth();
+  const { isAdminAuthenticated, logoutAdmin } = useAdminAuth();
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
   const [notifications, setNotifications] = useState([
@@ -173,10 +175,10 @@ export default function Header({ onMenuClick }: HeaderProps) {
               className="flex items-center gap-2 hover:bg-gray-50 p-1.5 rounded-full lg:rounded-xl transition-colors border border-transparent lg:border-gray-200"
             >
               <div className="w-8 h-8 bg-orange-100 text-orange-600 rounded-full flex items-center justify-center font-bold">
-                {user?.username?.charAt(0).toUpperCase() || 'U'}
+                {isAdminAuthenticated ? 'A' : (user?.username?.charAt(0).toUpperCase() || 'U')}
               </div>
               <span className="font-medium text-sm text-gray-700 hidden lg:block mr-2">
-                {user?.username}
+                {isAdminAuthenticated ? 'Admin' : user?.username}
               </span>
             </button>
 
@@ -188,20 +190,26 @@ export default function Header({ onMenuClick }: HeaderProps) {
                 />
                 <div className="absolute right-0 top-full mt-2 w-48 bg-white rounded-xl shadow-lg border py-1 z-50">
                   <div className="px-4 py-3 border-b border-gray-100">
-                    <p className="text-sm font-medium text-gray-900">{user?.username}</p>
-                    <p className="text-xs text-gray-500 truncate">{user?.email}</p>
+                    <p className="text-sm font-medium text-gray-900">{isAdminAuthenticated ? 'Admin' : user?.username}</p>
+                    <p className="text-xs text-gray-500 truncate">{isAdminAuthenticated ? 'admin@restaurant.com' : user?.email}</p>
                   </div>
-                  <Link 
-                    href="/profile"
-                    className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-orange-600"
-                    onClick={() => setShowProfileMenu(false)}
-                  >
-                    <User size={16} /> Profile
-                  </Link>
+                  {!isAdminAuthenticated && (
+                    <Link 
+                      href="/profile"
+                      className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-orange-600"
+                      onClick={() => setShowProfileMenu(false)}
+                    >
+                      <User size={16} /> Profile
+                    </Link>
+                  )}
                   <button 
                     onClick={() => {
                       setShowProfileMenu(false);
-                      logout();
+                      if (isAdminAuthenticated) {
+                        logoutAdmin();
+                      } else {
+                        logout();
+                      }
                     }}
                     className="w-full flex items-center gap-2 px-4 py-2 text-sm text-red-600 hover:bg-red-50"
                   >

@@ -28,11 +28,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     const getSession = async () => {
-      // Check for existing mock user in localStorage instead of sessionStorage
-      const storedUser = localStorage.getItem("mock_user");
-      if (storedUser) {
-        setUser(JSON.parse(storedUser));
-      }
+      // No persistence as requested: User logs out on refresh
       setIsLoading(false);
     };
 
@@ -45,10 +41,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           email: session.user.email || ""
         });
       } else {
-        const storedUser = localStorage.getItem("mock_user");
-        if (!storedUser) {
-          setUser(null);
-        }
+        // Automatically reset user if no session
+        setUser(null);
       }
       setIsLoading(false);
     });
@@ -103,7 +97,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       phone: existingUser.phone || ""
     };
     setUser(newUser);
-    localStorage.setItem("mock_user", JSON.stringify(newUser));
+    // User persistence removed to force logout on refresh
     
     const isAdmin = newUser.email === "admin@restaurant.com" || newUser.email.toLowerCase().includes("admin");
     router.push(isAdmin ? "/" : "/home");
@@ -131,7 +125,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       phone 
     };
     setUser(sessionUser);
-    localStorage.setItem("mock_user", JSON.stringify(sessionUser));
+    // User persistence removed to force logout on refresh
     
     const isAdmin = sessionUser.email === "admin@restaurant.com" || sessionUser.email.toLowerCase().includes("admin");
     router.push(isAdmin ? "/" : "/home");
@@ -140,7 +134,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const logout = async () => {
     await supabase.auth.signOut();
     setUser(null);
-    localStorage.removeItem("mock_user");
     router.push("/auth");
   };
 
